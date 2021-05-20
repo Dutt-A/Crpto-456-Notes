@@ -1,0 +1,544 @@
+\documentclass[12pt,letterpaper]{article}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage[edges]{forest}
+\pagestyle{fancy}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily\footnotesize,breaklines=true}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\lhead{CMSC/MATH/ENEE456 Definitions}
+\rhead{Aakash Dutt}
+\begin{document}
+    \begin{enumerate}
+        \item
+            Private Key Encryption Scheme: Defined by message space $M$ and algorithms.
+            \begin{enumerate}
+                \item $Gen$: Outputs $k\in K$
+                \item $Enc$: Outputs $c\leftarrow Enc_k(m)$
+                \item $Dec$: Outputs $m\leftarrow Dec_k(c)$ or "error"
+            \end{enumerate}
+            For all $m\in M$ and $k$ from $Gen$, $Dec_k(Enc_k(m))=m$.
+        \item
+            Shift Cipher:
+            \begin{enumerate}
+                \item M=\{String over lowercase alphabet\}
+                \item $Gen$: Chooses uniform $k\in\{0,\ldots,25\}$
+                \item $Enc_k(m_1\ldots m_t)$: For each $m_i$, output $c_1\ldots c_t$, where
+                    \[c_i:=[m_i+k]\mod 26\]
+                \item $Dec_k(c_1\ldots c_t)$: For each $c_i$, output $c_1\ldots c_t$, where
+                    \[m_i:=[c_i-k]\mod 26\]
+            \end{enumerate}
+        \item
+            Byte-Wise Shift Cipher:
+            \begin{enumerate}
+                \item M=\{String of bytes\}
+                \item $Gen$: Chooses uniform $k\in\{0x00,\ldots,0xFF\}$ (Gives 256 Possible Keys)
+                \item $Enc_k(m_1\ldots m_t)$: For each $m_i$, output $c_1\ldots c_t$, where
+                    \[c_i:=m_i\oplus k\]
+                \item $Dec_k(c_1\ldots c_t)$: For each $c_i$, output $c_1\ldots c_t$, where
+                    \[m_i:=c_i\oplus k\]
+            \end{enumerate}\newpage
+        \item
+            Vigenere Cipher: Make the key a string, where every character is shifted by the amount dictated by the next character of the key. We wrap around the key as more characters are needed. Decryption reverses the process.
+            \begin{enumerate}
+                \item Attack on a fixed key length: Assume a 14-character key. Look at every 14th character of the ciphertext, group them all into separate streams.
+                    \begin{enumerate}
+                        \item Let $p_i(0\leq i\leq 25)$ denote the frequency of the $i-th$ English character.
+                            \[\sum_i p_i^2\approx 0.065\]
+                        \item If $q_i$ is the observed frequency of the $i-th$ character in a ciphertext stream, we expect that if the stream is $j$, we have $q_{i+j}\approx p_i$ for all $i$.
+                            \[\sum_i p_iq_{i+j}\approx 0.065\]
+                        \item Test for every value $j$, take the highest sum.
+                    \end{enumerate}
+                \item Find the key length: 
+                    \begin{enumerate}
+                        \item When using proper key length, the ciphertext frequencies of a given stream $\{q_i\}$ will be shifted versions of $\{p_i\}$.
+                        \[\sum q_i^2\approx\sum p_i^2\approx 0.065\]
+                    \item With incorrect key lengths, ciphertext letters will be uniform.
+                        \[\sum q_i^2\approx \sum\left(\frac{1}{26}\right)^2\approx0.038\]
+                    \item  Thus, we find the key length $N$ to maximize 
+                        \[\sum q_i^2\]
+                    \end{enumerate}
+            \end{enumerate}\newpage
+            \item Byte-wise Vigenere Cipher: The key is a string of bytes, the plaintext is a string of bytes. To encrypt and decrypt, $\oplus$ each character in the text with the next character of the key. Wrap around key as needed.
+        \begin{enumerate}
+            \item Determine Key Length: Let $p_i$ be the frequency of a byte $i$ in ASCII.
+            \begin{enumerate}
+                \item For a candidate key length, take the first stream $q$ and calculate $\sum q_i^2$. We must find the sum satisfying the following. The correct key length yields a large value for all streams.
+                \[\sum q_i^2\approx \sum p_i^2\]
+            \end{enumerate}
+            \item Determine the i-th Key Byte: Assume key length known.
+            \begin{enumerate}
+                \item Look at i-th ciphertext stream, try decrypting with every byte value $b$. We must find something to satisfy the following, where $p_i'$ corresponds to English-letter frequencies.
+                \[\sum q_i'p_i'\approx\sum p_i'^2\approx 0.065\]   
+            \end{enumerate}
+        \end{enumerate}/P
+        \item Perfect Secrecy: An encryption scheme with message space $M$ and ciphertext space $C$ is perfectly secret if for every distribution over $M$ and every $m\in M$ and every $c\in C$ with $\Pr[C=c]>0$, the following holds.
+        \[\Pr[M=m|C=c]=\Pr[M=m]\]
+        \begin{enumerate}
+            \item Proof: If $(Gen, Enc, Dec)$ is a perfectly secret, then $|K|>|M|$
+                \begin{enumerate}
+                    \item Take the uniform distribution on $M$ and any ciphertext $c$. Consider $M(c)=\{Dec_k(c)\}_{k\in K}$.
+                    \item Since $|M(c)|\leq|K|\leq|M|$, there is some $m$ not in $M(c)$
+                    \item $\Pr[M=m|C=c]=0\neq Pr[M=m]$
+                \end{enumerate}
+        \end{enumerate}
+        \newpage
+
+        \item One Time Pad: Perfectly secret scheme.
+            \begin{enumerate}
+                \item $M=\{0,1\}^n$
+                \item $Gen:$ Choose a uniform $k\in\{0,1\}^n$
+                \item $Enc_k(m)=k\oplus m$
+                \item $Dec_k(c)=k\oplus c$
+                \item Correctness: $Dec_k(Enc_k(m))=k\oplus(k\oplus m)=m$.
+                \item Perfect Secrecy: Fix an arbitrary distribution over $M=\{0,1\}^n$, and an arbitrary $m,c\in \{0,1\}^n$.
+                    \[\Pr[C=c]=\sum_{m'}\Pr[C=c|M=m']*\Pr[M=m']\]
+                    \[=\sum_{m'}\Pr[k=m'\oplus c|M=m']*\Pr[M=m']\]
+                    \[=\sum_{m'}2^{-n}*\Pr[M=m']=2^{-n}\]
+                    \[\Pr[M=m|C=c]=\frac{\Pr[C=c|M=m]*\Pr[M=m]}{\Pr[C=c]}\]
+                    \[=\frac{\Pr[k=m\oplus c|M=m]*\Pr[M=m]}{2^{-n}}=\frac{2^{-n}*\Pr[M=m]}{2^{-n}}\]
+                \[=\Pr[M=m]\]
+                Thus, this scheme is perfectly secret.
+            \item Cracking One Time Pad with Multiple Messages:
+                \begin{enumerate}
+                    \item Given $c_1=k\oplus m_1$ and $c_2=k\oplus m_2$, we can get $c_1\oplus c_2=m_1\oplus m_2$.
+                    \item Since letters start with 01 and spaces begin with 02, the $\oplus$ of two letters or two spaces gives 00 while the $\oplus$ or a letter and a space gives $01$. Since spaces are more unlikely than letters, given many messages, if $m_i\oplus m_j$ likely produces $01$ for some fixed $m_i$, then $m_i$ is likely a space character.
+                \end{enumerate}
+            \end{enumerate}\newpage
+
+        \item
+            Indistinguishability Experiment: Given a scheme $\Pi=(Gen, Enc, Dec)$ over message space $M$.
+            \begin{enumerate}
+                \item Design a random experiment $PrivK_{A,\Pi}$
+                    \begin{enumerate}
+                        \item
+                            Two encrypted messages $m_0,m_1$ are made. For some $b\in(0,1)$, we set $c_b\leftarrow Enc_k(m_b)$. We send $m_0,m_1,c_b$ to the adversary.
+                        \item $A$ returns $0$ or $1$ based on if the plaintext was $m_0$ or $m_1$ in $b'\leftarrow A(c)$.
+                        \item $A$ succeeds if $b=b'$, in which case $PrivK_{A,\Pi}=1$. Otherwise, the experiment evaluates to 0.
+                    \end{enumerate}
+                \item $\Pi$ is perfectly indistinguishable for all adversaries $A$ if the following holds.
+                    \[\Pr[PrivK_{A,\Pi}=1]=\frac{1}{2}\]
+                    \begin{enumerate}
+                        \item $\Pi$ is perfectly indistinguishable if and only if $\Pi$ is perfectly secret.
+                    \end{enumerate}
+                \item Concrete Computational Indistinguishability: We define $(t,\epsilon)$ indistinguishability as indistinguishability where security may fail with probability $\leq\epsilon$ when restricted to time $\leq t$ CPU cycles. $\Pi$ is $(t,\epsilon)$-indistinguishable if for all attackers $A$ running in time at most $t$, the following holds.
+                    \[\Pr[PrivK_{A,\Pi}]\leq\frac{1}{2}+\epsilon\]
+                \item Asymptotic Computational Indistinguishability: Security may fail with probability $negl(n)$ for polynomial time attackers.
+                    \begin{enumerate}
+                        \item $negl(n):$ $f$ is negligible if for every polynomial $p$, it holds that $f(n)<\frac{1}{p(n)}$ for a large enough $n$. Or, it decays faster than an inverse polynomial.
+                    \end{enumerate}
+                    $\Pi$ is computationally indistinguishable for all probabalistic polynomial time attackers $A$ if there is a negligible function $\epsilon$ such that the following holds.
+                    \[\Pr[PrivK_{A,\Pi}]=\frac{1}{2}+\epsilon(n)\]
+            \end{enumerate}\newpage
+    \item Pseudorandomness: Informally, a distribution on $n$-bit strings is pseudorandom if it can not be differentiated from a completely uniform distribution.
+        \begin{enumerate}
+            \item Concrete Pseudorandomness: If $D$ is a distribution on $p$-bit strings, $D$ is $(t,\epsilon)$-pseudorandom if for all $A$ running in time at most $t$, the following holds. The adversary is able to sample from the distribution.
+                \[\left|\Pr_{x\leftarrow D}[A(x)=1]-\Pr_{x\leftarrow U_p}[A(x)=1]\right|\leq\epsilon\]
+            \item Asymptotic Pseudorandomness: If $D$ is a distribution over $p(n)$-bit strings, pseudorandomness is a porperty of a sequence of distributions. We say that $\{D_n\}=\{D_1,D_2,\ldots\}$ is pseudorandom if for all probabilistic polynomial distinguishers $A$, there is a negligible function $\epsilon$ such that the following holds.
+                \[\left|\Pr_{x\leftarrow D_n}[A(x)=1]-\Pr_{x\leftarrow U_{p(n)}}[A(x)=1]\right|\leq \epsilon(n)\]
+        \end{enumerate}
+    \item Pseudorandom Generator: Let $G$ be a deterministic polynomial time algorithm that is expanding ($|G(x)|=p(|x|)>|x|$). $G$ defines a sequence of distributions $\{D_n\}$ of outputs given a uniform input into $x$. We say that $G$ is pseudorandom if and only if $\{D_n\}$ is pseudorandom if and only if for all efficient distinguishers $A$ able to query for outputs, the following holds.
+    \[\left|\Pr_{x\leftarrow U_n}[A(G(x))=1]-\Pr_{y\leftarrow U_{p(n)}}[A(y)=1]\right|\leq\epsilon(n)\]\newpage
+    \item
+        Psuedo One-Time Pad:
+        \begin{enumerate}
+            \item Let $G$ be a deterministic algorithm, with $|G(k)|=p(|k|)$
+            \item $Gen(1^n):$ Outputs uniform $n$-bit key $k$.
+            \item $Enc_k(m):$ Output $G(k)\oplus m$
+            \item $Dec_k(c):$ Output $G(k)\oplus c$\bigskip\newline
+        To prove this is computationally secret, assume there is an attacker $A$ that breaks this scheme and use it to build an efficient $D$ breaking the pseudorandomness of $G$.
+            \item Proof of Computational Secrecy
+                \[\text{Let }\mu(n)=\Pr[PrivK_{A,\Pi}(n)=1]\]
+                \[\Pr_{x\leftarrow U_n}[D(G(x))=1]=\mu(n)\]
+            \[\Pr_{y\leftarrow U_{p(n)}}[D(y)=1]=\frac{1}{2}\]
+            \[|\mu(n)-\frac{1}{2}|\leq negl(n)\]
+            \[\Pr[PrivK_{A,\Pi}]\leq\frac{1}{2}+negl(n)\]
+        \end{enumerate}
+    \item Multiple Message Security: Fix some $\Pi,A$. We will define a randomized experiment $PrivK^{mult}_{A,\Pi}(n)$ as follows.
+                \begin{enumerate}
+                    \item Consider two vectors $(m_{0,1},\ldots,m_{0,t})$ and $(m_{1,1},\ldots,m_{1,t})$ with $|m_{0,i}|=|m_{1,i}|$ for all $i$.
+                    \item For some $k\leftarrow Gen(1^n)$ and $b\leftarrow\{0,1\}$, for all $i$ set $c_i\leftarrow Enc_k(m_{(b,i})$ in vector $(c_1,\ldots,c_t)$.
+                    \item Send the ciphertext vector and both message vectors to the adversary. The adversary returns $b'$ and succeeds if $b'=b$, in which case the experiment evaluate to $1$.            
+                \end{enumerate}
+                We say that $\Pi$ is multiple-message indistinguishable if the following holds for some neglibile function $\epsilon$.
+                \[\Pr[PrivK^{mult}_{A,\Pi}=1]\leq\frac{1}{2}+\epsilon(n)\] \newpage
+
+        \item Chosen Plaintext Attack Security: Fix some $\Pi, A$. We will define a randomized experiment $PrivK^{CPA}_{A,\Pi}$ as follows.
+        \begin{enumerate}
+            \item $k\leftarrow Gen(1^n)$
+            \item $A^{1^n}$ interacts with an encryption oracle $Enc_k()$, and is given $m_0$, $m_1$ of the same length. 
+            \item We set $b\leftarrow\{0,1\}$, $c\leftarrow Enc_k(m_b)$, and then give $c$ to $A$.
+            \item A continues to interact with the oracle
+            \item $A$ outputs $b'$, succeeding if $b=b'$, in which case the experiment evaluate to $1$.
+        \end{enumerate}
+        We say $\Pi$ is chosen-plaintext attack secure if for all probabalistic polynomial time attacks $A$, there is a negligible function $\epsilon$ such that the following holds.
+        \[\Pr[PrivK^{CPA}_{A,\Pi}(n)=1]\leq\frac{1}{2}+\epsilon(n)\]
+    Note: CPA-security is stronger than multiple-message indistinguishability. As a corollary, if $\Pi$ is CPA-secure, it is also multiple-message indistinguishable.\bigskip\newline
+    Note that no deterministic and stateless encryption scheme satisfies this
+    \newline
+    \item Uniform Functions: Where $Func_n$ is all functions mapping from $\{0,1\}^n$ to $\{0,1\}^n$.
+        \begin{enumerate}
+            \item Size of a function in $Func_n$: $n2^n$ bits
+            \item $|Func_n|=2^{n2^n}$
+        \end{enumerate}\newpage
+    \item Pseudorandom Function: Let $F:\{0,1\}^*\times\{0,1\}^*\rightarrow\{0,1\}^*$ be an efficient, deterministic algorithm. We will define $F_k(x)=F(k,x)$, where the first input is the key.
+        \begin{enumerate}
+            \item We will assume $F$ is length-preserving, or $|F(k,x)|=|k|=|x|$.
+            \item Choosing a uniform $k\in\{0,1\}^n$ is equivalent to choosing a random function $F_k:\{0,1\}^n\rightarrow\{0,1\}^n$. Note that there are at most $2^n$ possible functions $F_k$.\bigskip\newline
+        We say that $F$ is a pseudorandom function if for all polynomial time distinguishers $D$ having oracle access to its given function and some neglibile function $\epsilon$, the following holds.
+        \[\left|\Pr_{k\leftarrow\{0,1\}^n}[D^{F_k}=1]-\Pr_{f\leftarrow Func_n}[D^{f()}=1]\right|\leq\epsilon(n)\]
+        Note that a PRF F immediately implies a PRG G.
+        \end{enumerate}
+    \item Pseudorandom Permutation: We say $F$ is a permutation if it is a bijective function. Note that for a large enough $n$, a random permutation is indistinguishable from a random function. Similar to a pseudorandom function, the following must hold for a function to be a pseudorandom permutation, but $F_k$ is a pseudorandom permutation and $f$ is a permutation.
+        \[\left|\Pr_{k\leftarrow\{0,1\}^n}[D^{F_k}=1]-\Pr_{f\leftarrow Func_n}[D^{f()}=1]\right|\leq\epsilon(n)\]
+        Note that a block cipher is a practical construction of a pseudorandom permutation.
+    \item CPA-Secure Encryption Scheme: Let $F$ be a length-preserving, keyed function.
+        \begin{enumerate}
+            \item $Gen(1^n):$ Choose a uniform key $k\in\{0,1\}^n$.
+            \item $Enc_k(m):$ Let $|m|=|k|=n$. Choose a uniform $r\in\{0,1\}^n$ and output ciphertext $<r,F_k(r)\oplus m>$.
+            \item $Dec_k(m):$ Outputs $c_2\oplus F_k(c_1)$.
+        \end{enumerate}
+        If $F$ is a pseudorandom function, then this scheme is CPA-secure.\newpage
+    \item CTR-Mode Encryption: Proven to be pseudorandom if $F$ is pseudorandom.
+        \begin{enumerate}
+            \item $c_0\leftarrow\{0,1\}^n$ selected at random
+            \item For $i=1$ to $t$, do $c_i=m_i\oplus F_k(ctr+i)$
+            \item Output $c_0,c_1,\ldots,c_t$
+        \end{enumerate}
+
+    \item CBC-Mode Encryption: Proven to be pseudorandom if $F$ is pseudorandom.
+        \begin{enumerate}
+            \item $c_0\leftarrow\{0,1\}^n$ selected at random
+            \item For $i=1$ to $t$, do $c_i=F_k(m_i\oplus c_{i-1})$
+            \item Outputs $c_0,c_1,\ldots,c_t$.
+            \item $Dec_k(c)$ requires $F$ to be invertible. 
+        \end{enumerate}
+    \item Stream Ciphers: Infinite seed of psuedorandom bits on demand. They are secure if the output stream is pseudorandom. Has synchronized and unsynchronized modes of operation.
+        \begin{enumerate}
+            \item Synchronized: Sender and receiver maintain states. Makes sense when two parties are commuicating online and receiving messages in order
+            \item Unsynchronized: States are not maintained. Generally, you have to send a key over if two parties are communicating.
+        \end{enumerate}
+        \item Message Authentication Code: Defined by three probabilistic polynomial time algorithms.
+            \begin{enumerate}
+                \item Gen: Takes input $1^n$, outputs $k$. Assume $|k|\geq n$.
+                \item Mac: Takes input $k$ and message, outputs tag $t$. $t\leftarrow Mac_k(m)$.
+                \item Vrfy: Takes $k$, $m$, and $t$, and outputs $1$ if the tag and message match. Otherwise, $0$.
+            \end{enumerate}
+                    For all $m$ and $k$, we must have $Vrfy_k(m,Mac_k(m))=1$ in a correct scheme.\newpage
+                \item Existential Unforgeability: We fix $A,\Pi$ and define the following random experiment $Forge_{A,\Pi}(n)$.
+            \begin{enumerate}
+                \item $k\leftarrow Gen(1^n)$
+                \item $A$ interacts with an oracle $Mac_k()$. Let $M$ be the set of messages submitted to this oracle.
+                \item $A$ outputs $(m,t)$.
+                \item $A$ succeeds and the experiment evaluates to $1$ if $Vrfy(m,t)=1$ and $m\not\in M$.
+            \end{enumerate}
+            We say that $\Pi$ is secure, or existentially unforgeable if the following holds for some negligible $\epsilon$.
+            \[\Pr[Forge_{A,\Pi}(n)=1]\leq\epsilon (n)\]
+        \item Fixed-Length Secure MAC Scheme: Let $F$ be a length-preserving pseudorandom function, or block cipher.
+            \begin{enumerate}
+                \item $Gen$: Choose a uniform $k$ for $F$.
+                \item $Mac_k$: Output $F_k(m)$
+                \item $Vrfy_{k}(m,t):$ Output $1$ iff $F_k(m)=t$
+            \end{enumerate}
+        \item Secure CBC-MAC: Prepend the length of a message to the message.
+            \begin{enumerate}
+                \item $Gen$: Choose a uniform $k$ for $F$.
+                \item $Mac_k$: First, start with message length $l$. 
+                    \[t=F_k(m_l\oplus F_k(\ldots\oplus F_k(m_1\oplus F_k(l))))\]
+                \item $Vrfy_k(m,t)$: Output $1$ is the above holds for some $m$, $t$.
+            \end{enumerate}\newpage
+        \item Chosen Ciphertext Attack Security: Fix some $\Pi, A$. We will define a randomized experiment $PrivK^{CCA}_{A,\Pi}$ as follows.
+        \begin{enumerate}
+            \item $k\leftarrow Gen(1^n)$
+            \item $A^{1^n}$ interacts with an encryption oracle $Enc_k()$ and decryption oracle $Dec_k()$, and is given $m_0$, $m_1$ of the same length. 
+            \item We set $b\leftarrow\{0,1\}$, $c\leftarrow Enc_k(m_b)$, and then give $c$ to $A$.
+            \item A continues to interact with both oracles, but can not request decryption of $c$.
+            \item $A$ outputs $b'$, succeeding if $b=b'$, in which case the experiment evaluate to $1$.
+        \end{enumerate}
+        We say $\Pi$ is chosen-ciphertext attack secure if for all probabalistic polynomial time attacks $A$, there is a negligible function $\epsilon$ such that the following holds.
+        \[\Pr[PrivK^{CCA}_{A,\Pi}(n)=1]\leq\frac{1}{2}+\epsilon(n)\]
+    \item Malleability: A scheme is malleable if it is possible to modify a ciphertext and thereby cause a predictable change in the plaintext.\bigskip\newline
+        CCA-security implies non-malleability.
+    \item Padding Oracle Attack: Start altering message from the start until you infringe on the padding, in which case an error will be returned, if a change on the i-th ciphertext bit only changes the i-th bit of the encoded data. Then, keep altering the ciphertext until you guess a value that correctly matches the padding, in which case you may be able to attain a key for that bit.\newpage
+    \item Authenticated Encryption: We use CPA-Secure encryption schemes and MAC-secure encryption schemes in combination to create CCA-Secure Schemes. These schemes achieve both CCA-Security and Existential Unforgeability.
+        \begin{enumerate}
+            \item Encrypt then Authenticate: Works, as encrypted, invisible data is authenticated, meaning it will not be altered.
+            \item Encrypt and Authenticate: Does not work, because if you send MAC encryption and CCA-Secure encryption simultaneously, the MAC may not be CCA-Secure and the CCA may not be unforgeably.
+            \item Authenticate, then Encrypt: Padding Oracle Attack still works, since an adversary can still alter a message and get an error during encryption.
+        \end{enumerate}
+            \item Secure Sessions: Consider parties wishing to communicate securely and with integrity over a session. We must consider possible attacks to the session.
+        \begin{enumerate}
+            \item Replay Attack: Resend an intercepted message again. May for instance, result in multiple charges for one bank request.
+            \item Reordering Attack: Messages are mixed up.
+            \item Reflection Attack: Messages sent out are redirected to sender.
+        \end{enumerate}
+        Secure sessions must use counters to keep track of message numbers and order as well as identifiers to identify who is sending the message as part of the data to thwart these attacks.
+        \item Cryptographic Hash Function: A deterministic function mapping arbitrary length inputs to a short, fixed-length output. Generally keyed, though we assume unkeyed for simplicity.
+        \[H:\{0,1\}^*\rightarrow\{0,1\}^n\]
+        \item Collision Resistance: Let $H:\{0,1\}^*\rightarrow\{0,1\}^\ell$ be a hash funciton. A collision is a distinct pair of inputs $x,x'$ such that $H(x)=H'(x)$. $H$ is collision resistant if finding a collision in $H$ is computationally infeasible.
+        \item Birthday Attack: Compute $H(x_1),\ldots,H(x_k)$. What is the probability of a collision as a function of $k$?
+        \[\Pr[\text{Find a collision}]=\frac{1}{N}+\frac{2}{N}+\ldots+\frac{k-1}{N}=\frac{k(k-1)}{2N}=\frac{k^2}{2N}-\frac{k}{2N}\]
+        Now, let $k=\sqrt{N}$. We get the following.
+        \[\Pr[\text{Find a collision}]=\frac{1}{2}-\frac{1}{2\sqrt{N}}\approx\frac{1}{2}\]
+        If you have a hash mapping to $n$ bits, the security level is therefore $\frac{n}{2}$ bits.
+        \item Merkle-Damgard Transform: Create a hash function $H$ for a sequence of messages from a hash function $h$ for one message. Let $IV\leftarrow\{0,1\}^n$.
+        \[H(m_1,\ldots,m_B)=h(h(h(h(IV,m_1),m_2),\ldots,m_B),B+1)\]
+        Claim: $H$ is collision resistant if $h$ is collision resistant.\bigskip\newline
+        Suppose we find a collision for $H$. Let $k=h(h(h(IV,m_1),m_2),\ldots,m_B)$, and $k'=k=h(h(h(IV,m_1),m_2),\ldots,m_B)$. Then, we have found some $h(k,B+1)=h(k',B+1)$. If $k\neq k$, then we are done. Otherwise, we can find another $k''$.
+        \item Hash-and-Mac: A secure MAC for long messages.
+		\begin{enumerate}
+			\item $Gen':$ Find some $H$ by Merkel-Damgard, take $Gen$ 
+			\item $Mac'_k: t\leftarrow Mac_k(H(m))$
+			\item $Vrfy'_k(m,t):$ Check $Vrfy(t,H(m))$
+		\end{enumerate}\newpage
+		\item Outsourced Storage Problem: Lets say you have multiple files you want to store on another server, and need a way to verify/update these files.
+		\begin{enumerate}
+			\item Hash-All: The client stores $h_1=H(f_1),\ldots,h_n=H(f_n)$. We use hash functions to verify if each file sent back is $h_1,\ldots,h_n$ when we request one.
+			\begin{enumerate}
+				\item Communication (Bits to Download): 0
+				\item Update: 0
+				\item Local Files: 256*n
+			\end{enumerate}
+			\item Hash-All: The client stores $h_1=H(f_1),\ldots,h_n=H(f_n)$. We use hash functions to verify if each file sent back is $h_1,\ldots,h_n$ when we request one.
+			\begin{enumerate}
+				\item Communication (Bits to Download): $O(n)$ (We need all files to hash!)
+				\item Update: $O(n)$
+				\item Local Files: $O(1)$
+			\end{enumerate}
+			\item Hash-Prefix: We verify with $h(h(h(f_1,f_2),f_3),\ldots)$.
+			\begin{enumerate}
+				\item Communication (Bits to Download): $*O(n)$
+				\item Update: $*O(n)$
+				\item Local Files: $O(1)$
+			\end{enumerate}
+			Note that for certain files, $*$ is far more efficient.
+		\end{enumerate}\newpage
+		\item Number Theory Essentials
+		\begin{enumerate}
+			\item Primes: Natural number $x$ whose only divisors are $x$ and $1$. There are $\approx\frac{n}{\log(n)}$ primes less than $n$.
+			\item GCD: $d=\gcd(a,b)$ is the smallest positive integer satisfying $d=ax+by$ for variables $i$,$j$.
+			\item Euclidean Algorithm: Note that $\gcd(a,b)=\gcd(b,a\mod b)$. Then, we can find $gcd(a,b)$ with the following algorithm.
+		\begin{algorithmic}
+        \begin{algorithm}
+            \Function{Euclidean}{$a,b$}
+            \If{b=0}
+            	\State{\Return $a$}
+            \Else
+            	\State{\Return{Euclidean($b$, $a\mod b$)}}
+            \EndIf
+        \EndFunction
+        \end{algorithm}
+        \end{algorithmic}
+        	\item Group: Set $G$ with an operation $\cdot$ that satisfies the following group axioms.
+        	\begin{enumerate}
+        		\item Closure under $\cdot$
+        		\item Associativity under $\cdot$
+        		\item There exists an Identity Element
+        		\item Every element has an inverse under $\cdot$
+        		We say that a group is Abelian if it also satisfies commutativity.
+        	\end{enumerate}
+        	\item Group Order: Number of elements in a group
+        	\item $\mathbb{Z}_N^*$: Let $N=pq$, where $p,q\in\mathbb{P}$. Then, $|Z_N^*|=\Phi(p)\Phi(q)=(p-1)(q-1)$.
+        	\[\mathbb{Z}_N^*=\{x\in\mathbb{Z}_N^{**}\text{: $\gcd(x,N)=1$}\}\]
+        	\[\mathbb{Z}_N^{**}=\{1,\ldots,N-1\}\text{, $N\in\mathbb{P}$}\]
+        	\item If $G$ is a group of order $m$ and $\gcd(e,m)=1$, then $g^e$ is a permutation.
+			\item Cyclic Group: If we have a group $G$ of order $m$ and there is an element $g$ of order $m$, then $g$ is a generator and $G$ is cyclic.		
+			\item Chinese Remainder Theorem: If we have $x\mod p$ and $y\mod q$ for some coprime $p,q$, then we can produce some $a$ such that $a\equiv x\mod p$ and $a\equiv y\mod q$.
+			\item Invertibility: $b$ is invertible mod $N$ if $\gcd(b,N)=1$.
+			\item Fermat's Little Theorem: For any element $g$ of group $G$ of order $m$, it holds that $g^m\equiv 1\mod N$.
+			\begin{enumerate}
+				\item Corollary I: $g^x=g^{x\mod m}$
+				\item Corollary II: If $d\equiv e^{-1}\mod m$, then $g^d$ is the inverse of $g^e$. (We then have $g^{de}\equiv g^1\mod N$)
+				\item Corollary III: If $\gcd(e,m)=1$, then $x^e\mod N$ is a permutation.
+			\end{enumerate}
+		\end{enumerate}
+		
+		\item Efficient Modular Exponentiation: Efficiently find $a^b\mod N$. Instead of doing $a*\ldots*a$, do $(((a^2)^2)\ldots)^2$.
+		\item Discrete Log Assumption: Let $G$ be a cyclic group of order $q$ and let $g$ be a generator of $g$. Let $h$ be a group element. It is very difficult to find an $x$ such that $h=g^x$\bigskip\newline
+		Let $G$ be a group generation algorithm that on input $1^n$, outputs a cyclic group $G$ with order $q$ such that $||q||=n$ and a generator $g$. The experiment $Dlog_{A,G}(n)$ is as follows.
+		\begin{enumerate}
+			\item Compute $(G,q,g)\leftarrow G(1^n)$.
+			\item Choose a uniform $h\in G$
+			\item Run $A(G,q,g,h)$ to get $x$
+			\item Experiment evaluates to $1$ is $g^x=h$.
+		\end{enumerate}
+		We say that the discrete-logarithm problme is hard relative to $G$ if for all PPT algorithms $A$, the following holds.
+		\[Pr[Dlog_{A,G}(n)=1]\leq negl(n)\]
+		\newpage
+		\item RSA/Factoring Assumption: Given $N=pq$ where $p,q\in\mathbb{P}$, it is very difficult to find out $p$ and $q$. Note that $\mathbb{Z}_N^*$ is the RSA group.\bigskip\newline
+		Let $GenRSA$ be a PPT algorithm that given an input $1^n$, outputs a modulo $N$ that is the product of two $n-$bit primes and also integers $e,d>0$ with $\gcd(e,\phi(N))=1$ and $ed\equiv 1\mod\phi(N)$. The RSA experiment $RSA-inv_{\mathcal{A},GenRSA}(n)$ is as follows.
+            \begin{enumerate}
+                \item Run $GenRSA(1^n)$ to obtain $(N,e,d)$
+                \item Choose a uniform $y\in\mathbb{Z}_N^*$
+                \item $\mathcal{A}$ is given $(N,e,y)$ and outputs $x\in\mathbb{Z}_N^*$
+                \item The output is $1$ if $x^e=y\mod N$, 0 otherwise.
+            \end{enumerate}
+            We say that the RSA problem is hard relative to GenRSA if for all PPT algorithms $\mathcal{A}$, there exists a negligible function $negl$ such that $Pr[RSA-inv_{\mathcal{A},GenRSA}(n)=1]\leq negl(n)$.
+    	\item Diffie-Hellman Problems: Fix a cyclic group $G$ and a generator $g$. We define $DH_g(h_1,h_2)=DH_g(g^x,g^y)=g^{xy}$
+            \begin{enumerate}
+            	\item Computational Diffie-Hellman Problem: Given $g,h_1,h_2$, compute $DH_g(h_1,h_2)$.
+            	\item Decisional Diffie-Hellman Problem: Given $g,h_1,h_2$, distinguish $DH_g(h_1,h_2)$ from a uniform element of $G$.
+            \end{enumerate}
+		We say that the DDH problem is hard relative to G if for all PPT algorithms $A$, the following holds.
+            	\[\Pr[A(G,g,q,g^x,g^y,g^{xy})=1]-\Pr[A(G,q,g,g^x,g^y,g^z)=1]\leq negl(n)\]
+           Theorem: If the discrete-logarithm problem is easy, then so is CDH. If the CDH problem is easy, so is the DDH problem.\newpage
+           \item Group Selection: The discrete logarithm problem is not hard in all groups. For cryptographic applications, it is best to use prime order groups, since the discrete log problem is easier if the order of the group has small primes. The following groups are currently suitable for use.
+           	\begin{enumerate}
+           		\item Let $p,q\in\mathbb{P}$. We select $p=tq+1$. Then, $\mathbb{Z}_p^*$ has order $p-1=tq$. Then, we define the group as the subgroup of $t^{th}$ powers.
+           		\[G=[x^t\mod p]|x\in\mathbb{Z^*_p}]\] 
+           		\item Elliptic Curve Groups
+           	\end{enumerate}
+   		\item Key Distribution Problem: How do you establish a secure channel between two members who have no prior communications? (Motivation for Private Key Cryptography)
+   		\begin{enumerate}
+   			\item New Directions in Cryptography by Diffie and Hellman: Creates 'Assymetric' or Private Key Encryption-related key exhange protocols. 
+   		\end{enumerate}
+   		\item Key Exchange Protocol Security: For key exchange protocol $\Pi$, we devise the experiment $KE_{A,\Pi}$.
+   		\begin{enumerate}
+   			\item Honest parties run $\Pi$ with security parameter $n$, resulting in transcript $trans$ and shared key $k$.
+   			\item We choose uniform bit $b$. If $b=0$, then set $k'=k$. If $b=1$, then choose uniform $k'\in\{0,1\}^n$.
+   			\item $KE_{A,\Pi}$ evaluates to $1$, or $A$ suceeds if $b'=b$.
+   		\end{enumerate}
+   		We say that $\Pi$ is secure against passive eavesdropping if for all PPT adversaries $A$, the following holds.
+   		\[\Pr[KE_{A,\Pi}=1]\leq\frac{1}{2}+negl(n)\]\newpage
+   		\item Diffie-Hellman Protocol: Let $A$, $B$ be two users. Note that everything but $x$ and $y$ are known. We will work in the group $\mathbb{Z}_N=\{1,\ldots,m-1\}$.
+   		\begin{enumerate}
+   			\item $A$: Pick $x\in\{0,m-1\}$. Set $h_1=g^x$, and send it to $B$.
+   			\item $B$: Pick $y\in\{0,m-1\}$. Set $h_2=g^y$, and send it to $A$.
+   			\item Now, both users can produce shared key $g^{xy}=h_2^y=h_1^x$.
+   			\item $c=k*m$, $m=c*k^{-1}$
+   		\end{enumerate}
+   		If the Decisional Diff \& Hellman Assumption holds, then this protocol is secure.
+   		\item Public Key (Asymmetric) Encryption Scheme: Consists of 3 PPT algorithms $Gen$, $Enc$, and $Dec$.
+   		\begin{enumerate}
+   			\item $Gen$: Key-generation algorithm that on input $1^n$, outputs $p_k$, $s_k$.
+   			\item $Enc$: Encryption that on input $p_k$ and message $m$ outputs ciphertext $c$ (Used by the public).
+   			\item $Dec$: Decryption algorithm that on input $s_k$ and ciphertext $m$, outputs message $m$ or error (Used by the private party/recipient).
+   		\end{enumerate}
+   		Correctness Property: $Dec_{s_k}(Enc_{p_k}(m))=m$
+   		\item CPA-Security for Public Schemes:
+   		Fix a public-key encryption scheme $\Pi$ and an adversary $A$. We will define experiment $PubK-CPA_{A,\Pi}$ as follows.
+   		\begin{enumerate}
+   			\item Run $Gen(1^n)$ to get keys $p_k$, $s_k$.
+   			\item Give $p_k$ to $A$, who outputs $(m_0,m_1)$ of the same length.
+   			\item Choose uniform $b\in\{0,1\}$ and compute the ciphertext $c\in Enc_{p_k}(m_b)$. Then, give $c$ to $A$.
+   			\item $A$ outputs a guess $b'$, and the experiment evaluate to $1$ if $b'=b$.
+   		\end{enumerate}
+   		We say that $\Pi$ is CPA-secure if for all PPT adversaries $A$, the following holds.
+   			\[\Pr[PubK-CPA_{A,\Pi}](n)=1]\leq\frac{1}{2}+negl(n)\]
+   			Note that the encryption oracle is redundant since we already give out the public key.\newpage
+   		\item CCA-Security for Private Schemes: Similar to for Public Key Encryption, where you get a decryption oracle.
+   		\item El Gamal PKE Scheme (Follows Diffie-Hellman Key Exchange):
+   		\begin{enumerate}
+   			\item $Gen(1^n):$ Run $G(1^n)$ to obtain $G$, $q$, $g$. Choose a unifrom $x\in\mathbb{Z}_q$. $p_k=(G,q,g,g^x)$, $s_k=x$.
+   			\item $Enc_{p_k}(m):$ Choose uniform $y\in\mathbb{Z}_q$. The ciphertext is $(g^y,(g^x)^y*m)$.
+   			\item $Dec_{s_k}(c_1,c_2): c_2*c_1^{-x}=c_2*(g^{-xy})$ 
+   		\end{enumerate}
+   		El Gamal is CPA-secure under if the DDH assumption is hard for G, similar to Diffie-Hellman key exchange protocol. It is also secure for multiple messages.\bigskip\newline
+   		It is not, however, CCA secure. Given $(c_1,c_2)$, we can decrypt $(c_1,\alpha*c_2)$ to get $(c_1,\alpha*c_2)=(g^y,h^y*(\alpha*m))$, meaning that the ouptuts are malleable.
+   		\item 
+   			Long Message Public Key Encryption: 
+   		\begin{enumerate}
+   				\item Block-by-block: $(m_1,\ldots,m_\ell)\rightarrow(Enc_{p_k}(m_1),\ldots,Enc_{p_k}(m_\ell))$\smallskip\newline
+   				If the underlying scheme is CPA-secure for short messages, then this is secure for arbitrary length messages. Also, however, inefficient.\smallskip\newline
+   				Note: Public Key Encryption is NOT a block cipher! CTR/CBC-Mode makes no sense while ECB mode is secure for Public Key Encryption.\newpage
+   				\item Hybrid Encryption: Use public-key encryption to establish a shared secret key $k$, then use $k$ to encrypt the message with a private/symmetric key encryption scheme. Lower ciphertext expansion and amortized efficiency of private/symmetric key. encryption\smallskip\newline
+   				Let $\Pi=(Gen,Enc,Dec)$ be a public key scheme and $\Pi'=(Gen',Enc',Dec')$ be private. We define $\Pi_{hy}$ as follows.
+   			\begin{enumerate}
+   				\item $Gen_{hy}:$ Gen
+   				\item $Enc_{hy}(p_k,m):$ 
+   					\begin{enumerate}
+   						\item Choose $k\in\{0,1\}^n$
+   						\item $c\leftarrow Enc_{p_k}(k)$
+   						\item $c'\leftarrow Enc'_k(m)$
+   						\item Return $c,c'$
+   					\end{enumerate} 
+   				\item $Dec_{hy}:$ Simply decrypt $c$ for key $k$, use it to decrypt $c'$.
+   			\end{enumerate}
+   			If $\Pi$ is a CPA-secure public key scheme and $\Pi'$ is a private key scheme, then $\Pi_{hy}$ is a CPA-secure public key scheme. 
+   		\item Key Encapsulation Mechanism: For Hybrid Encyrption, it is sufficient to have a Key Encapsulation Mechanism rather that takes a public key and outputs a ciphertext $c$ and a key $k$. 
+   		\begin{enumerate}
+   			\item Correctness: $k$ can be recovered from $c$ given $s_k$
+   			\item Security: $k$ is indistinguishable from uniform given $p_k$ and $c$. We can also define CPA/CCA-security for this.   			
+   		\end{enumerate}
+   		If $\Pi$ is a CPA-secure KEM and $\Pi'$ is a CPA-secure Private Key Encryption scheme, then the combination is a CPA-secure public key scheme (It suffices for $\Pi'$ to be EAV-secure).
+   		\end{enumerate}\newpage
+   		\item El-Gamal Based KEM
+   		\begin{enumerate}
+   			\item $Gen(1^n):$ Run $G(1^n)$ to obtain $G,q,g$. Choose a uniform $x\in\mathbb{Z}_q$. $p_k=(G,q,g,g^x)$ and $s_k=x$.
+   			\item $Ecaps_{p_k}:$ Choose a uniform $y\in\mathbb{Z}_q$. The ciphertext is $g^y$, the key is $k=H(g^{xy})$.
+   			\item $Decaps_{s_k}(c): $ Outputs $k=H(c^x)$
+   		\end{enumerate}
+   		We then combine this with private key encryption for the full scheme.\smallskip\newline If DDH holds and H is modeled as a random oracle, then the KEM is CPA-secure. This is CCA-Secure if $Enc'$ is CCA-Secure. It is standardized as DHIES/ECIES.
+   		\item Plain RSA Encrypion Scheme:
+   		\begin{enumerate}
+   			\item $Gen(1^n):$ $(N,e,d)\leftarrow RSAGen(1^n)$. We let $p_k=(N,e)$ and $s_k=d$.
+   			\item $Enc_{p_k}(m):$ $c=[m^e\mod N]$ 
+   			\item $Dec_{s_k}(m):$ $m=[c^d\mod N]$
+   		\end{enumerate}
+   		This scheme is deterministic, and thus not CPA-Secure. It is also not CPA-secure (Consider encoding $\alpha*m$).
+   		\item PKCS \#1 v1.5: Fixes plain RSA by use randomized encoding $r$ to attach to messages.
+   		\begin{enumerate}
+   			\item $Enc_{p_k}(m):$ $c=[(r||m)^e\mod N]$, where $r$ is uniformly picked at random. 
+   			\item $Dec_{s_k}(m):$ $m=[(r||c)^d\mod N]$, then remove the padding $r$.
+   		\end{enumerate}
+   		But, clever CPA attacks are possible, and CPA attacks are known if $r$ is too short.\newpage
+   		\item PKCS \#1 v2.0: Fixes the prior version. Has not been proven insecure, but like the prior, its security is an open question. No proof of security, unless $m$ is very short.
+   		\begin{enumerate}
+   			\item Optimal Assymetric Encryption Padding applied to message first. This introduces redundancy, so that not every $c\in\mathbb{Z}_N^*$ is a valid ciphertext.
+   		\end{enumerate}
+   		Is CCA-Secure under the RSA-assumption and if $G,H$ are modeled as random oracles. Widely used today.
+   		\item RSA-Based KEM
+   		\begin{enumerate}
+   			\item Encaps(m)
+   				\begin{enumerate}
+ 					\item Choose uniform $r\in\mathbb{Z}_N^*$
+   					\item $c=[r^e\mod N]$
+   					\item $k=H(r)$
+   				\end{enumerate}
+   			\item Decaps(c)
+   				\begin{enumerate}
+   					\item $r=[c^d\mod N]$
+   					\item $k=H(r)$
+   				\end{enumerate}
+   		\end{enumerate}
+   		 Can be proven CCA-Secure under the RSA assumption, if $H$ is a random oracle.
+   		 \item Digital Signatures: Provide integrity in public-key settings, analogous to MACs.
+   		 \begin{enumerate}
+   		 	\item $Gen:$ Takes as input $1^n$, outputs $p_k,s_k$.
+   		 	\item $Sign:$ Takes as input $s_k$,$m$, outputs signature $r$.
+   		 	\item $Vrfy:$ Takes $p_k$ and $m$, outputs $1$ or $0$.
+   		 \end{enumerate}
+   		 Correctness Property:
+   		 \[Vrfy_{s_k}(m,Sign_{s_k}(m))=1\]\newpage
+   		 \item Existential Unforgeability: Given some $A$ and Signature Scheme $\Pi$, we define random experiment $Forge_{A,\Pi}$.
+   		 \begin{enumerate}
+   		 	\item $p_k,s_k\leftarrow Gen(1^n)$
+   		 	\item $A$ is given $p_k$, interacts with oracle $Sign_{s_k}()$. Let $m$ be the set of messages sent to this oracle.
+   		 	\item $A$ outputs $(m,r)$.
+   		 	\item $A$ succeeds and the experiment evaluates to 1 if $Vrfy(m,r)=1$ and $m\not\in M$.
+   		 \end{enumerate}
+   		 We say that $\Pi$ is secure for all PPT attackers $A$ if the following holds.
+   		 \[Pr[Forge_{A,\Pi}(n)=1]\leq negl(n)\]
+   		 Note that we are still vulnerable to replay attacks, which can be addressed just like in MACs.
+   		 \item Hash-and-Sign Paradigm: A scheme for arbitrary length messages. Given signature scheme $\Pi$ and hash $H:\{0,1\}^*\rightarrow\{0,1\}^n$, we can construct a signature scheme $\Pi'$ for arbitrary length messages as follows.
+   		 \begin{enumerate}
+   		 	\item $Gen':$ Gen
+   		 	\item $Sign'_{s_k}(m):$ $Sign_{s_k}(H(m))$
+   		 	\item $Vrfy'_{p_k}(m,r):$ $Vrfy_{p_k}(H(m),r)$
+   		 \end{enumerate}
+   		 If $\Pi$ is secure and $H$ is collision resistant, then $\Pi'$ is secure.
+   		 \item Plain RSA Digital Signature
+   		 \begin{enumerate}
+   		 	\item $Gen(1^n):$ $p_k=(N,e)$, $s_k=d$.
+   		 	\item $Sign(m):$ $\sigma\leftarrow m^d\mod N$
+   		 	\item $Verify_{p_k}(m,\sigma): $1 if $m=\sigma^e\mod N$, otherwise $0$
+   		 \end{enumerate}
+   		 Attack: If $(t_1,t_2)$ are valid signatures on $(m_1,m_2)$, then we can get pair $((m_1*m_2),(t_1*t_2))$.
+    \end{enumerate}
+\end{document}
